@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -29,16 +30,37 @@ public class SysArticleServiceImpl implements ISysArticleService {
 
     @Override
     public void parsePDFData() throws Exception {
+        List<String> companyNameRegexList = new ArrayList<>();
+        companyNameRegexList.add("(^\b)?[\\u4E00-\\u9FA5]+(\\()?.+(\\))?(有限公司)\b?");
+
+
+        List<String> companyLegalNameRegexList = new ArrayList<>();
+        companyLegalNameRegexList.add("(?<=(法定代表人[:：\\x20]\\b?)).*?(?=\\n)");
+        companyLegalNameRegexList.add("(?<=(((法 定 代 表 人 )|(法 定 表 人 ))[:：])).*?(?=\\n)");
+        companyLegalNameRegexList.add("(?<=((法定代表人)|(法人代表)[:：\\x20]\\b?)).*?(?=\\n)");
+
+        List<String> companyOfficeNameRegexList = new ArrayList<>();
+        companyOfficeNameRegexList.add("(?<=(其他[相有]关资料 \\n名称 )).*?(?=\\n)");
+        companyOfficeNameRegexList.add("(?<=((事务所|事务所名称)[:：\\x20]\\b)).*?(?=\\n)");
+        companyOfficeNameRegexList.add("(?<=其他有关资料 \\n).*(?<=[伙]）\\x20\\n)");
+        companyOfficeNameRegexList.add("(?<=公司聘请).*(?=为公司审计单位)");
+        companyOfficeNameRegexList.add("(?<=事务所名称、办公地址：).*(?=\\x20{2}青岛市)");
+
+
         String path = "/Users/xunmi/coding/上市公司年报";
         File dir = new File(path);
         File[] files = dir.listFiles();
-        int i = 0;
         for (File file : files) {
             String pdfText = getPdfText(file, true, 1, 10);
-            SysArticle article = getCompanyData(pdfText);
-            article.setFileName(getFileName(file));
-            article.setArticleImage("/profile/upload/default.png");
-            System.out.println(article);
+            SysArticle article = SysArticle.builder()
+                    .articleImage("/profile/upload/default.png")
+                    .fileName(getFileName(file))
+                    .companyName(getTargetData(pdfText, companyNameRegexList, false))
+                    .companyLegalPeople(getTargetData(pdfText, companyLegalNameRegexList, false))
+                    .companyOfficeName(getTargetData(pdfText, companyOfficeNameRegexList, true)
+                            .replaceAll("\\n", "")
+                            .replaceAll("名称", ""))
+                    .build();
             sysArticleMapper.insertSysArticle(article);
         }
     }
@@ -70,7 +92,41 @@ public class SysArticleServiceImpl implements ISysArticleService {
         return text;
     }
 
-    protected SysArticle getCompanyData(String text) {
+
+    protected String getTargetData(String textContent, List<String> targetRegexs, boolean multipleLine) {
+
+        String targetData = "";
+        Pattern compile = null;
+        Matcher matcher = null;
+        for (String regex : targetRegexs) {
+            if (multipleLine) {
+                compile = Pattern.compile(regex, Pattern.DOTALL);
+            } else {
+                compile = Pattern.compile(regex);
+            }
+            matcher = compile.matcher(textContent);
+            if (matcher.find()) {
+                targetData = matcher.group().replaceAll(" ", "");
+                return targetData;
+            }
+        }
+        return targetData;
+    }
+
+    protected String getCompanyName(String textContent, List<String> regexs) {
+        String companyName = "";
+        for (String regex : regexs) {
+            Pattern compile = Pattern.compile(regex);
+            Matcher matcher = compile.matcher(textContent);
+            if (matcher.find()) {
+                companyName = matcher.group().replaceAll(" ", "");
+                return companyName;
+            }
+        }
+        return companyName;
+    }
+
+    protected SysArticle getCompanyDataOrigin(String text) {
         SysArticle article = new SysArticle();
         String regex = "";
         Pattern compile = null;

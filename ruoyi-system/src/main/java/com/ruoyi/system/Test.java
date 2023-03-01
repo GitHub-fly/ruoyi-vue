@@ -41,7 +41,7 @@ public class Test {
     }
 
     void testOne() throws Exception {
-        File file = new File("/Users/xunmi/coding/上市公司年报/贵研铂业：2014年年度报告-2015-04-16-1200838320.PDF");
+        File file = new File("/Users/xunmi/coding/上市公司年报/阳泉煤业：2013年年度报告-2014-04-25-63918138.PDF");
         String pdfText = getPdfText(file, true, 1, 10);
         System.out.println(pdfText);
         SysArticle article = getCompanyData(pdfText);
@@ -106,6 +106,7 @@ public class Test {
     }
 
     SysArticle getCompanyData(String text) {
+
         SysArticle article = new SysArticle();
         String regex = "";
         Pattern compile = null;
@@ -124,8 +125,10 @@ public class Test {
         if (matcher.find()) {
             companyName = matcher.group().replaceAll(" ", "");
         }
+
         System.out.println("公司名==========");
         System.out.println(companyName);
+
 
         regex = "(?<=(法定代表人[:：\\x20]\\b?)).*?(?=\\n)";
         compile = Pattern.compile(regex);
@@ -150,23 +153,28 @@ public class Test {
         }
         System.out.println("法定人===========");
         System.out.println(legalName);
+
+
         regex = "(?<=(其他[相有]关资料 \\n名称 )).*?(?=\\n)";
         compile = Pattern.compile(regex);
         matcher = compile.matcher(text);
         String officeName = "";
         if (matcher.find()) {
+            System.out.println("1");
             officeName = matcher.group().replaceAll(" ", "");
         } else {
             regex = "(?<=((事务所|事务所名称)[:：\\x20]\\b)).*?(?=\\n)";
             compile = Pattern.compile(regex);
             matcher = compile.matcher(text);
             if (matcher.find()) {
+                System.out.println("2");
                 officeName = matcher.group().replaceAll(" ", "");
             } else {
                 regex = "(?<=其他有关资料 \\n).*(?<=[伙]）\\x20\\n)";
                 compile = Pattern.compile(regex, Pattern.DOTALL);
                 matcher = compile.matcher(text);
                 if (matcher.find()) {
+                    System.out.println("3");
                     officeName = matcher.group().replaceAll(" ", "")
                             .replaceAll("\\n", "")
                             .replaceAll("名称", "");
@@ -175,6 +183,7 @@ public class Test {
                     compile = Pattern.compile(regex, Pattern.DOTALL);
                     matcher = compile.matcher(text);
                     if (matcher.find()) {
+                        System.out.println("4");
                         officeName = matcher.group().replaceAll(" ", "")
                                 .replaceAll("\\n", "");
                     } else {
@@ -182,6 +191,7 @@ public class Test {
                         compile = Pattern.compile(regex, Pattern.DOTALL);
                         matcher = compile.matcher(text);
                         if (matcher.find()) {
+                            System.out.println("5");
                             officeName = matcher.group().replaceAll(" ", "")
                                     .replaceAll("\\n", "");
                         }
