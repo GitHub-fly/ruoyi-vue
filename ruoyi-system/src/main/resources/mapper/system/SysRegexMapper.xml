@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysRegexMapper">
+    
+    <resultMap type="SysRegex" id="SysRegexResult">
+        <result property="regexId"    column="regex_id"    />
+        <result property="regexTarget"    column="regex_target"    />
+        <result property="regex"    column="regex"    />
+        <result property="regexOrder"    column="regex_order"    />
+        <result property="delFlg"    column="del_flg"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectSysRegexVo">
+        select regex_id, regex_target, regex, regex_order, del_flg, create_time, update_time from sys_regex
+    </sql>
+
+    <select id="selectSysRegexList" parameterType="SysRegex" resultMap="SysRegexResult">
+        <include refid="selectSysRegexVo"/>
+        <where>  
+            <if test="regexTarget != null "> and regex_target = #{regexTarget}</if>
+            <if test="regex != null  and regex != ''"> and regex = #{regex}</if>
+            <if test="regexOrder != null "> and regex_order = #{regexOrder}</if>
+            and del_flg = 0
+        </where>
+        order by regex_order
+    </select>
+    
+    <select id="selectSysRegexByRegexId" parameterType="Long" resultMap="SysRegexResult">
+        <include refid="selectSysRegexVo"/>
+        where regex_id = #{regexId}
+    </select>
+        
+    <insert id="insertSysRegex" parameterType="SysRegex" useGeneratedKeys="true" keyProperty="regexId">
+        insert into sys_regex
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="regexTarget != null">regex_target,</if>
+            <if test="regex != null">regex,</if>
+            <if test="regexOrder != null">regex_order,</if>
+            <if test="delFlg != null">del_flg,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="regexTarget != null">#{regexTarget},</if>
+            <if test="regex != null">#{regex},</if>
+            <if test="regexOrder != null">#{regexOrder},</if>
+            <if test="delFlg != null">#{delFlg},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateSysRegex" parameterType="SysRegex">
+        update sys_regex
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="regexTarget != null">regex_target = #{regexTarget},</if>
+            <if test="regex != null">regex = #{regex},</if>
+            <if test="regexOrder != null">regex_order = #{regexOrder},</if>
+            <if test="delFlg != null">del_flg = #{delFlg},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where regex_id = #{regexId}
+    </update>
+
+    <delete id="deleteSysRegexByRegexId" parameterType="Long">
+        delete from sys_regex where regex_id = #{regexId}
+    </delete>
+
+    <delete id="deleteSysRegexByRegexIds" parameterType="String">
+        delete from sys_regex where regex_id in 
+        <foreach item="regexId" collection="array" open="(" separator="," close=")">
+            #{regexId}
+        </foreach>
+    </delete>
+</mapper>
