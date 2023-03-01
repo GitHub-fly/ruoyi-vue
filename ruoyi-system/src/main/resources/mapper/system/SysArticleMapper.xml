@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysArticleMapper">
+
+    <resultMap type="SysArticle" id="SysArticleResult">
+        <result property="articleId"    column="article_id"    />
+        <result property="articleTitle"    column="article_title"    />
+        <result property="articleContent"    column="article_content"    />
+        <result property="articleAuthor"    column="article_author"    />
+        <result property="articleImage"    column="article_image"    />
+        <result property="publishTime"    column="publish_time"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="fileName"    column="file_name"    />
+        <result property="companyName"    column="company_name"    />
+        <result property="companyLegalPeople"    column="company_legal_people"    />
+        <result property="companyOfficeName"    column="company_office_name"    />
+    </resultMap>
+
+    <sql id="selectSysArticleVo">
+        select article_id, article_title, article_content, article_author, article_image, publish_time, del_flag, create_time, update_time, file_name, company_name, company_legal_people, company_office_name from sys_article
+    </sql>
+
+    <select id="selectSysArticleList" parameterType="SysArticle" resultMap="SysArticleResult">
+        <include refid="selectSysArticleVo"/>
+        <where>
+            <if test="articleTitle != null  and articleTitle != ''"> and article_title = #{articleTitle}</if>
+            <if test="articleContent != null  and articleContent != ''"> and article_content = #{articleContent}</if>
+            <if test="articleAuthor != null  and articleAuthor != ''"> and article_author = #{articleAuthor}</if>
+            <if test="articleImage != null  and articleImage != ''"> and article_image = #{articleImage}</if>
+            <if test="publishTime != null "> and publish_time = #{publishTime}</if>
+            <if test="fileName != null  and fileName != ''"> and file_name like concat('%', #{fileName}, '%')</if>
+            <if test="companyName != null  and companyName != ''"> and company_name like concat('%', #{companyName}, '%')</if>
+            <if test="companyLegalPeople != null  and companyLegalPeople != ''"> and company_legal_people = #{companyLegalPeople}</if>
+            <if test="companyOfficeName != null  and companyOfficeName != ''"> and company_office_name like concat('%', #{companyOfficeName}, '%')</if>
+        </where>
+    </select>
+
+    <select id="selectSysArticleByArticleId" parameterType="Long" resultMap="SysArticleResult">
+        <include refid="selectSysArticleVo"/>
+        where article_id = #{articleId}
+    </select>
+
+    <insert id="insertSysArticle" parameterType="SysArticle">
+        insert into sys_article
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="articleId != null">article_id,</if>
+            <if test="articleTitle != null">article_title,</if>
+            <if test="articleContent != null">article_content,</if>
+            <if test="articleAuthor != null">article_author,</if>
+            <if test="articleImage != null">article_image,</if>
+            <if test="publishTime != null">publish_time,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="fileName != null">file_name,</if>
+            <if test="companyName != null">company_name,</if>
+            <if test="companyLegalPeople != null">company_legal_people,</if>
+            <if test="companyOfficeName != null">company_office_name,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="articleId != null">#{articleId},</if>
+            <if test="articleTitle != null">#{articleTitle},</if>
+            <if test="articleContent != null">#{articleContent},</if>
+            <if test="articleAuthor != null">#{articleAuthor},</if>
+            <if test="articleImage != null">#{articleImage},</if>
+            <if test="publishTime != null">#{publishTime},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="fileName != null">#{fileName},</if>
+            <if test="companyName != null">#{companyName},</if>
+            <if test="companyLegalPeople != null">#{companyLegalPeople},</if>
+            <if test="companyOfficeName != null">#{companyOfficeName},</if>
+        </trim>
+    </insert>
+
+    <update id="updateSysArticle" parameterType="SysArticle">
+        update sys_article
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="articleTitle != null">article_title = #{articleTitle},</if>
+            <if test="articleContent != null">article_content = #{articleContent},</if>
+            <if test="articleAuthor != null">article_author = #{articleAuthor},</if>
+            <if test="articleImage != null">article_image = #{articleImage},</if>
+            <if test="publishTime != null">publish_time = #{publishTime},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="fileName != null">file_name = #{fileName},</if>
+            <if test="companyName != null">company_name = #{companyName},</if>
+            <if test="companyLegalPeople != null">company_legal_people = #{companyLegalPeople},</if>
+            <if test="companyOfficeName != null">company_office_name = #{companyOfficeName},</if>
+        </trim>
+        where article_id = #{articleId}
+    </update>
+
+    <delete id="deleteSysArticleByArticleId" parameterType="Long">
+        delete from sys_article where article_id = #{articleId}
+    </delete>
+
+    <delete id="deleteSysArticleByArticleIds" parameterType="String">
+        delete from sys_article where article_id in
+        <foreach item="articleId" collection="array" open="(" separator="," close=")">
+            #{articleId}
+        </foreach>
+    </delete>
+</mapper>
