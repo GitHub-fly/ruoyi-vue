@@ -42,3 +42,13 @@ export function delArticle(articleId) {
     method: 'delete'
   })
 }
+
+
+// 自动导入 PDF 文件
+export function importData(articleId) {
+  return request({
+    url: '/system/article/importData',
+    method: 'post'
+  })
+}
+

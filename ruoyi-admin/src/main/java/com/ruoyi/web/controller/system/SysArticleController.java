@@ -40,9 +40,9 @@ public class SysArticleController extends BaseController
     @Log(title = "文章", businessType = BusinessType.IMPORT)
     @PreAuthorize("@ss.hasPermi('system:article:import')")
     @PostMapping("/importData")
-    public AjaxResult importData(List<MultipartFile> file) throws Exception
+    public AjaxResult importData() throws Exception
     {
-        sysArticleService.parsePDFData(file);
+        sysArticleService.parsePDFData();
         return success("成功");
     }
 

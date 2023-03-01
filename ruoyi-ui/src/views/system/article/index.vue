@@ -48,7 +48,7 @@
 
       <el-col :span="1.5">
         <el-button type="info" plain icon="el-icon-upload2" size="mini" @click="handleImport"
-          v-hasPermi="['system:article:import']">导入</el-button>
+          v-hasPermi="['system:article:import']">自动导入PDF文件</el-button>
       </el-col>
 
       <el-col :span="1.5">
@@ -150,7 +150,7 @@
 </template>
 
 <script>
-import { listArticle, getArticle, delArticle, addArticle, updateArticle } from "@/api/system/article"
+import { listArticle, getArticle, delArticle, addArticle, updateArticle, importData } from "@/api/system/article"
 import { getToken } from "@/utils/auth"
 export default {
   name: "Article",
@@ -310,8 +310,9 @@ export default {
 
     /** 导入按钮操作 */
     handleImport() {
-      this.upload.title = "用户导入PDF文件"
-      this.upload.open = true
+      importData().then(() => {
+        this.getList()
+      })
     },
 
     /** 导出按钮操作 */

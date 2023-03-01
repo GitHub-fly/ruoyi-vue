@@ -1,22 +1,15 @@
 package com.ruoyi.system.service.impl;
 
-import com.ruoyi.common.config.RuoYiConfig;
 import com.ruoyi.common.utils.DateUtils;
 import com.ruoyi.system.domain.SysArticle;
 import com.ruoyi.system.mapper.SysArticleMapper;
 import com.ruoyi.system.service.ISysArticleService;
-import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -35,16 +28,18 @@ public class SysArticleServiceImpl implements ISysArticleService {
     private SysArticleMapper sysArticleMapper;
 
     @Override
-    public void parsePDFData(List<MultipartFile> files) throws Exception {
-        for (MultipartFile multipartFile : files) {
-            File file = new File("/Users/xunmi/coding/ruoyi.pdf");
-            FileUtils.copyInputStreamToFile(multipartFile.getInputStream(), file);
+    public void parsePDFData() throws Exception {
+        String path = "/Users/xunmi/coding/上市公司年报";
+        File dir = new File(path);
+        File[] files = dir.listFiles();
+        int i = 0;
+        for (File file : files) {
             String pdfText = getPdfText(file, true, 1, 10);
             SysArticle article = getCompanyData(pdfText);
             article.setFileName(getFileName(file));
             article.setArticleImage("/profile/upload/default.png");
+            System.out.println(article);
             sysArticleMapper.insertSysArticle(article);
-            System.out.println("---");
         }
     }
 
@@ -65,6 +60,7 @@ public class SysArticleServiceImpl implements ISysArticleService {
             stripper.setEndPage(endPage);
             text = stripper.getText(document);
         } catch (Exception e) {
+            System.out.println(e);
             throw new Exception();
         } finally {
             if (document != null) {
@@ -86,7 +82,7 @@ public class SysArticleServiceImpl implements ISysArticleService {
          (有限公司) ：包含"有限公司"字符串
          \b?    : 零个或一个空格、换行符等
          */
-        regex = "(^\b)?[\\u4E00-\\u9FA5]+(有限公司)\b?";
+        regex = "(^\b)?[\\u4E00-\\u9FA5]+(\\()?.+(\\))?(有限公司)\b?";
         compile = Pattern.compile(regex);
         matcher = compile.matcher(text);
         String companyName = "";
@@ -96,23 +92,73 @@ public class SysArticleServiceImpl implements ISysArticleService {
         System.out.println("公司名==========");
         System.out.println(companyName);
 
-        regex = "(?<=(法定代表人[:：\\s]\b?)).*?(?=\\s)";
+        regex = "(?<=(法定代表人[:：\\x20]\\b?)).*?(?=\\n)";
         compile = Pattern.compile(regex);
         matcher = compile.matcher(text);
         String legalName = "";
         if (matcher.find()) {
-            legalName = matcher.group();
+            legalName = matcher.group().replaceAll(" ", "");
+        } else {
+            regex = "(?<=(((法 定 代 表 人 )|(法 定 表 人 ))[:：])).*?(?=\\n)";
+            compile = Pattern.compile(regex);
+            matcher = compile.matcher(text);
+            if (matcher.find()) {
+                legalName = matcher.group().replaceAll(" ", "");
+            } else {
+                regex = "(?<=((法定代表人)|(法人代表)[:：\\x20]\\b?)).*?(?=\\n)";
+                compile = Pattern.compile(regex);
+                matcher = compile.matcher(text);
+                if (matcher.find()) {
+                    legalName = matcher.group().replaceAll(" ", "");
+                }
+            }
         }
         System.out.println("法定人===========");
         System.out.println(legalName);
 
-        regex = "(?<=((事务所|事务所名称)[:：\\s]\b?)).*?(?=\\s)";
+        regex = "(?<=(其他[相有]关资料 \\n名称 )).*?(?=\\n)";
         compile = Pattern.compile(regex);
         matcher = compile.matcher(text);
         String officeName = "";
-        while (matcher.find()) {
-            officeName = matcher.group();
+        if (matcher.find()) {
+            officeName = matcher.group().replaceAll(" ", "");
+        } else {
+            regex = "(?<=((事务所|事务所名称)[:：\\x20]\\b)).*?(?=\\n)";
+            compile = Pattern.compile(regex);
+            matcher = compile.matcher(text);
+            if (matcher.find()) {
+                officeName = matcher.group().replaceAll(" ", "");
+            } else {
+                regex = "(?<=其他有关资料 \\n).*(?<=[伙]）\\x20\\n)";
+                ;
+                compile = Pattern.compile(regex, Pattern.DOTALL);
+                matcher = compile.matcher(text);
+                if (matcher.find()) {
+                    officeName = matcher.group().replaceAll(" ", "")
+                            .replaceAll("\\n", "")
+                            .replaceAll("名称", "");
+                } else {
+                    regex = "(?<=公司聘请).*(?=为公司审计单位)";
+                    compile = Pattern.compile(regex, Pattern.DOTALL);
+                    matcher = compile.matcher(text);
+                    if (matcher.find()) {
+                        officeName = matcher.group().replaceAll(" ", "")
+                                .replaceAll("\\n", "")
+                                .replaceAll("名称", "");
+                    } else {
+                        regex = "(?<=事务所名称、办公地址：).*(?=\\x20{2}青岛市)";
+                        compile = Pattern.compile(regex, Pattern.DOTALL);
+                        matcher = compile.matcher(text);
+                        if (matcher.find()) {
+                            officeName = matcher.group().replaceAll(" ", "")
+                                    .replaceAll("\\n", "");
+                        }
+                    }
+                }
+
+            }
         }
+
         System.out.println("事务所===========");
         System.out.println(officeName);
         article.setCompanyName(companyName);

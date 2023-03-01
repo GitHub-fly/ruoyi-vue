@@ -2,7 +2,6 @@ package com.ruoyi.system.service;
 
 import java.util.List;
 import com.ruoyi.system.domain.SysArticle;
-import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 文章Service接口
@@ -13,7 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 public interface ISysArticleService 
 {
 
-    public void parsePDFData(List<MultipartFile> files) throws Exception;
+    public void parsePDFData() throws Exception;
 
     /**
      * 查询文章
