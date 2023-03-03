@@ -15,6 +15,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -47,22 +50,54 @@ public class SysArticleServiceImpl implements ISysArticleService {
                 .regexTarget(2L)
                 .build());
 
+        ExecutorService pool = Executors.newFixedThreadPool(10);
         String path = "/Users/xunmi/coding/上市公司年报";
         File dir = new File(path);
         File[] files = dir.listFiles();
         assert files != null;
-        for (File file : files) {
-            String pdfText = getPdfText(file, true, 1, 10);
-            SysArticle article = SysArticle.builder()
-                    .articleImage("/profile/upload/default.png")
-                    .fileName(getFileName(file))
-                    .companyName(getTargetData(pdfText, companyNameRegexList, false))
-                    .companyLegalPeople(getTargetData(pdfText, companyLegalNameRegexList, false))
-                    .companyOfficeName(getTargetData(pdfText, companyOfficeNameRegexList, true)
-                            .replaceAll("\\n", "")
-                            .replaceAll("名称", ""))
-                    .build();
-            sysArticleMapper.insertSysArticle(article);
+
+        int totalPage = 10;
+        int pageSize = 10;
+        long start = System.currentTimeMillis();
+        final AtomicInteger atomicInt = new AtomicInteger();
+
+        for (int i = 0; i < totalPage; i++) {
+            final int currentPage = i;
+            Runnable run = new Runnable() {
+                @Override
+                public void run() {
+                    for (int j = 0; j < pageSize; j++) {
+                        File file = files[j + currentPage * pageSize];
+                        String pdfText = null;
+                        try {
+                            pdfText = getPdfText(file, true, 1, 10);
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                        SysArticle article = SysArticle.builder()
+                                .articleImage("/profile/upload/default.png")
+                                .fileName(getFileName(file))
+                                .companyName(getTargetData(pdfText, companyNameRegexList, false))
+                                .companyLegalPeople(getTargetData(pdfText, companyLegalNameRegexList, false))
+                                .companyOfficeName(getTargetData(pdfText, companyOfficeNameRegexList, true)
+                                        .replaceAll("\\n", "")
+                                        .replaceAll("名称", ""))
+                                .build();
+                        atomicInt.addAndGet(sysArticleMapper.insertSysArticle(article));
+                    }
+
+                    if (atomicInt.get() == (totalPage * pageSize)) {
+                        System.out.println("同步数据到db，它已经花费 " + (System.currentTimeMillis() - start) + "  ms");
+                    }
+
+                }
+            };
+            try {
+                Thread.sleep(5);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            pool.execute(run);
         }
     }
 

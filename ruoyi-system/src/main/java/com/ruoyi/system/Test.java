@@ -41,13 +41,13 @@ public class Test {
     }
 
     void testOne() throws Exception {
-        File file = new File("/Users/xunmi/coding/上市公司年报/阳泉煤业：2013年年度报告-2014-04-25-63918138.PDF");
+        String fileName = "长运股份2001年年度报告-2002-04-03-563299";
+        File file = new File("/Users/xunmi/coding/上市公司年报/" + fileName + ".PDF");
         String pdfText = getPdfText(file, true, 1, 10);
         System.out.println(pdfText);
         SysArticle article = getCompanyData(pdfText);
         article.setFileName(getFileName(file));
         article.setArticleImage("/profile/upload/default.png");
-        System.out.println(article);
     }
 
     void testTwo() {
@@ -135,18 +135,21 @@ public class Test {
         matcher = compile.matcher(text);
         String legalName = "";
         if (matcher.find()) {
+            System.out.println("法人1====================");
             legalName = matcher.group().replaceAll(" ", "");
         } else {
             regex = "(?<=(((法 定 代 表 人 )|(法 定 表 人 ))[:：])).*?(?=\\n)";
             compile = Pattern.compile(regex);
             matcher = compile.matcher(text);
             if (matcher.find()) {
+                System.out.println("法人2====================");
                 legalName = matcher.group().replaceAll(" ", "");
             } else {
                 regex = "(?<=((法定代表人)|(法人代表)[:：\\x20]\\b?)).*?(?=\\n)";
                 compile = Pattern.compile(regex);
                 matcher = compile.matcher(text);
                 if (matcher.find()) {
+                    System.out.println("法人3====================");
                     legalName = matcher.group().replaceAll(" ", "");
                 }
             }
